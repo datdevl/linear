@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MERGE SORT • EASY VIEW</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+<style>
+    :root {
+        --primary: #06b6d4;
+        --purple: #a855f7;
+        --pink: #ec4899;
+    }
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #0f172a 0%, #1e1133 100%);
+        color: white;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+    }
+    .header {
+        text-align: center;
+        padding: 30px 0;
+        background: rgba(0,0,0,0.4);
+    }
+    h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 3.5rem;
+        background: linear-gradient(90deg, #06b6d4, #a855f7, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .controls {
+        text-align: center;
+        padding: 20px;
+        background: rgba(15,23,42,0.8);
+    }
+    input {
+        padding: 14px 20px;
+        width: 380px;
+        background: #1e2937;
+        border: 1px solid #64748b;
+        border-radius: 999px;
+        color: white;
+        margin-right: 10px;
+    }
+    button {
+        padding: 14px 28px;
+        margin: 0 6px;
+        border: none;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .btn-start { background: linear-gradient(#06b6d4, #22d3ee); color: black; }
+    .btn-step  { background: linear-gradient(#a855f7, #c084fc); color: white; }
+    .btn-random { background: #475569; }
+
+    .main {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+    .visual {
+        flex: 1;
+        background: rgba(15,23,42,0.7);
+        border-radius: 24px;
+        padding: 25px;
+        min-height: 70vh;
+        overflow: auto;
+    }
+    .array {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 25px 0;
+    }
+    .bar {
+        width: 45px;
+        background: linear-gradient(#06b6d4, #0e7490);
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        padding-top: 6px;
+        transition: all 0.5s ease;
+        min-height: 40px;
+    }
+    .left-half  { background: linear-gradient(#a855f7, #7e22ce); }
+    .right-half { background: linear-gradient(#ec4899, #be185d); }
+    .merging   { background: linear-gradient(#fbbf24, #f59e0b); animation: mergeAnim 1s infinite; }
+    .sorted    { background: linear-gradient(#34d399, #10b981); }
+
+    @keyframes mergeAnim {
+        0%,100% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+    }
+
+    .log {
+        width: 420px;
+        background: rgba(15,23,42,0.9);
+        border-radius: 24px;
+        padding: 20px;
+        overflow-y: auto;
+        max-height: 80vh;
+    }
+    .log-item {
+        padding: 14px;
+        margin-bottom: 12px;
+        background: #1e2937;
+        border-radius: 12px;
+        border-left: 5px solid #06b6d4;
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>MERGE SORT</h1>
+    <p>Phân chia & Hợp nhất • Dễ hình dung</p>
+</div>
+
+<div class="controls">
+    <input id="input" value="64, 34, 25, 12, 22, 11, 90, 88, 45, 67, 39" placeholder="Nhập mảng...">
+    <button class="btn-random" onclick="randomArray()">Random</button>
+    <button class="btn-start" onclick="startSort()">▶ AUTO</button>
+    <button class="btn-step" onclick="stepMode()">STEP</button>
+</div>
+
+<div class="main">
+    <div class="visual" id="visual"></div>
+    <div class="log" id="log"></div>
+</div>
+
+<script>
+const visual = document.getElementById('visual');
+const logDiv = document.getElementById('log');
+
+function addLog(text, color = '#06b6d4') {
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    item.style.borderLeftColor = color;
+    item.innerHTML = text;
+    logDiv.prepend(item);
+}
+
+function renderArray(arr, special = {}) {
+    visual.innerHTML = '';
+    const container = document.createElement('div');
+    container.className = 'array';
+    
+    arr.forEach((num, i) => {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = (num * 4) + 'px';
+        bar.textContent = num;
+
+        if (special.left && special.left.includes(i)) bar.classList.add('left-half');
+        if (special.right && special.right.includes(i)) bar.classList.add('right-half');
+        if (special.merging && special.merging.includes(i)) bar.classList.add('merging');
+        if (special.sorted) bar.classList.add('sorted');
+
+        container.appendChild(bar);
+    });
+    visual.appendChild(container);
+}
+
+function randomArray() {
+    const size = 10;
+    const arr = Array.from({length: size}, () => Math.floor(Math.random()*80)+10);
+    document.getElementById('input').value = arr.join(', ');
+}
+
+async function mergeSort(arr) {
+    if (arr.length <= 1) return arr;
+
+    const mid = Math.floor(arr.length / 2);
+    const left = arr.slice(0, mid);
+    const right = arr.slice(mid);
+
+    addLog(`<strong>Chia mảng:</strong> [${left.join(', ')}]  |  [${right.join(', ')}]`, '#a855f7');
+    renderArray(arr, {left: left.map((_,i)=>i), right: right.map((_,i)=>mid+i)});
+
+    await new Promise(r => setTimeout(r, 1200));
+
+    const sortedLeft = await mergeSort(left);
+    const sortedRight = await mergeSort(right);
+
+    // Merge
+    let result = [];
+    let i=0, j=0;
+    let tempArr = [...arr];
+
+    addLog(`<strong>Đang hợp nhất...</strong>`, '#fbbf24');
+
+    while (i < sortedLeft.length && j < sortedRight.length) {
+        if (sortedLeft[i] <= sortedRight[j]) {
+            result.push(sortedLeft[i++]);
+        } else {
+            result.push(sortedRight[j++]);
+        }
+        renderArray(result.concat(arr.slice(result.length)), {merging: true});
+        await new Promise(r => setTimeout(r, 250));
+    }
+
+    result = result.concat(sortedLeft.slice(i)).concat(sortedRight.slice(j));
+    renderArray(result, {sorted: true});
+
+    addLog(`✅ Hợp nhất xong: <strong>${result.join(', ')}</strong>`, '#34d399');
+    await new Promise(r => setTimeout(r, 800));
+
+    return result;
+}
+
+async function startSort() {
+    visual.innerHTML = '';
+    logDiv.innerHTML = '';
+
+    let inputArr = document.getElementById('input').value
+        .split(',')
+        .map(n => parseInt(n.trim()))
+        .filter(n => !isNaN(n));
+
+    addLog("🚀 BẮT ĐẦU MERGE SORT", "#06b6d4");
+    renderArray(inputArr);
+
+    const result = await mergeSort(inputArr);
+    
+    addLog(`<strong>🎉 HOÀN THÀNH!</strong><br>Mảng đã sắp xếp: ${result.join(', ')}`, "#34d399");
+}
+
+function stepMode() {
+    addLog("Tính năng Step-by-Step đang được phát triển...", "#fbbf24");
+}
+
+window.onload = () => {
+    addLog("🌟 Merge Sort Visualizer đã sẵn sàng", "#06b6d4");
+};
+</script>
+</body>
+</html>
